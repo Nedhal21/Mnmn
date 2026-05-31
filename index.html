@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0a0e1a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>MikroTik Mobile Scanner</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-card: #1f2937;
+      --bg-hover: #374151;
+      --accent: #3b82f6;
+      --accent-light: #60a5fa;
+      --accent-glow: rgba(59, 130, 246, 0.3);
+      --text-main: #f9fafb;
+      --text-secondary: #e5e7eb;
+      --text-muted: #9ca3af;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: #374151;
+      --border-light: #4b5563;
+      --shadow: 0 4px 20px rgba(0,0,0,0.5);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --safe-top: env(safe-area-inset-top, 20px);
+      --safe-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg-primary);
+      color: var(--text-main);
+      font-family: 'Inter', system-ui, sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Mobile optimizations */
+    input, button, select, textarea { font-size: 16px; }
+    @media (max-width: 480px) {
+      input, button, select, textarea { font-size: 16px; }
+    }
+
+    /* Header */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: linear-gradient(180deg, var(--bg-primary) 0%, rgba(15,23,42,0.95) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: var(--safe-top) 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .app-header h1 {
+      font-size: 20px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--text-main) 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+    }
+    .app-header p {
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: linear-gradient(0deg, var(--bg-primary) 0%, rgba(15,23,42,0.95) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding-bottom: var(--safe-bottom);
+      display: flex;
+      justify-content: space-around;
+      padding-top: 8px;
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 4px;
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      background: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .nav-item .icon { font-size: 22px; }
+    .nav-item.active { color: var(--accent-light); }
+    .nav-item.active .icon { filter: drop-shadow(0 0 8px var(--accent-glow)); }
+
+    /* Main Content */
+    .main-content {
+      padding: 16px;
+      padding-bottom: calc(80px + var(--safe-bottom));
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 16px;
+      transition: all 0.3s;
+    }
+    .card:active { transform: scale(0.98); }
+    .card h2 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+    }
+
+    /* Form Elements */
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input, select, textarea {
+      width: 100%;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 14px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-family: inherit;
+      transition: all 0.3s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    textarea { font-family: 'Fira Code', monospace; resize: vertical; min-height: 100px; font-size: 14px; }
+    select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: left 12px center; padding-left: 40px; }
+
+    /* Buttons */
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, var(--accent) 0%, #2563eb 100%);
+      color: white;
+      border: none;
+      padding: 14px 24px;
+      font-size: 15px;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 100%;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .btn:active { transform: scale(0.96); }
+    .btn-secondary { background: var(--bg-hover); border: 1px solid var(--border); color: var(--text-secondary); }
+    .btn-success { background: linear-gradient(135deg, var(--success) 0%, #059669 100%); }
+    .btn-danger { background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%); }
+    .btn-warning { background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%); }
+    .btn-sm { padding: 10px 16px; font-size: 13px; }
+    .btn-group { display: flex; gap: 8px; margin-top: 12px; }
+    .btn-group .btn { flex: 1; }
+
+    /* Templates */
+    .templates-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 0;
+      margin-bottom: 16px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .templates-scroll::-webkit-scrollbar { display: none; }
+    .template-chip {
+      flex-shrink: 0;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 10px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      white-space: nowrap;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .template-chip:active { transform: scale(0.95); }
+    .template-chip.active {
+      background: linear-gradient(135deg, var(--accent) 0%, #2563eb 100%);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    /* Progress */
+    .progress-container {
+      margin-top: 16px;
+      background: var(--bg-primary);
+      padding: 16px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+    .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; font-weight: 600; }
+    .progress-bar-bg { background: var(--bg-card); height: 12px; border-radius: 6px; overflow: hidden; }
+    .progress-bar-fill {
+      background: linear-gradient(90deg, var(--accent), var(--success));
+      height: 100%;
+      width: 0%;
+      transition: width 0.4s ease;
+      border-radius: 6px;
+      position: relative;
+    }
+    .progress-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+    .progress-stats { display: flex; justify-content: space-between; margin-top: 10px; font-size: 12px; color: var(--text-muted); }
+
+    /* Console */
+    .console-log {
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      font-family: 'Fira Code', monospace;
+      font-size: 12px;
+      height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: #38bdf8;
+      line-height: 1.8;
+      -webkit-overflow-scrolling: touch;
+    }
+    .console-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .console-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); animation: pulse 2s infinite; }
+    .status-dot.inactive { background: var(--danger); animation: none; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+    /* Results List */
+    .results-list {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      max-height: 300px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+    .result-item:last-child { border-bottom: none; }
+    .result-item.success { border-right: 3px solid var(--success); }
+    .result-item.failed { border-right: 3px solid var(--danger); }
+    .result-item:active { background: var(--bg-hover); }
+    .result-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .result-badge.success { background: rgba(16,185,129,0.2); color: var(--success); }
+    .result-badge.failed { background: rgba(239,68,68,0.2); color: var(--danger); }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .stat-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-box-value { font-size: 28px; font-weight: 800; color: var(--accent-light); }
+    .stat-box-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: calc(var(--safe-top) + 10px);
+      left: 16px;
+      right: 16px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow);
+      animation: slideDown 0.3s ease;
+      pointer-events: auto;
+    }
+    .toast::before { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 4px; }
+    .toast.success { border-right: 4px solid var(--success); }
+    .toast.error { border-right: 4px solid var(--danger); }
+    .toast.warning { border-right: 4px solid var(--warning); }
+    .toast.info { border-right: 4px solid var(--accent); }
+    @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    /* Hide/Show */
+    .hide { display: none !important; }
+    .tab-content { display: none; animation: fadeIn 0.3s ease; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+    /* Pull to refresh indicator */
+    .ptr-indicator {
+      text-align: center;
+      padding: 10px;
+      color: var(--text-muted);
+      font-size: 12px;
+      display: none;
+    }
+    .ptr-indicator.visible { display: block; }
+  </style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="app-header">
+  <h1>🔧 MikroTik Mobile</h1>
+  <p>فحص الكروت على الهاتف - يعمل بدون سيرفر</p>
+</div>
+
+<div class="main-content">
+
+  <!-- TAB 1: GENERATE -->
+  <div id="tab-generate" class="tab-content active">
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-box-value" id="statGenerated">0</div>
+        <div class="stat-box-label">مولد</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-box-value" id="statSaved">0</div>
+        <div class="stat-box-label">محفوظ</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>⚙️ توليد الكروت</h2>
+      <div class="form-group">
+        <label>طريقة التوليد</label>
+        <select id="genMode" onchange="toggleGenerationFields()">
+          <option value="pattern">التوليد الذكي</option>
+          <option value="random">العشوائي</option>
+          <option value="sequential">التسلسلي</option>
+        </select>
+      </div>
+
+      <div id="patternFields">
+        <div class="form-group">
+          <label>عينات (3 عينات):</label>
+          <textarea id="patternSamples" rows="3" placeholder="552502Ej20&#10;55250eF920&#10;5525heD490"></textarea>
+        </div>
+      </div>
+
+      <div id="randomFields" class="hide">
+        <div class="form-group">
+          <label>البادئة:</label>
+          <input type="text" id="prefix" placeholder="61">
+        </div>
+        <div class="form-group">
+          <label>الطول:</label>
+          <input type="number" id="totalLength" value="8" min="1" max="32">
+        </div>
+        <div class="form-group">
+          <label>الأحرف:</label>
+          <select id="charSet">
+            <option value="numeric">أرقام</option>
+            <option value="alpha">أحرف</option>
+            <option value="alphanumeric">أحرف+أرقام</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="sequentialFields" class="hide">
+        <div class="form-group">
+          <label>البادئة:</label>
+          <input type="text" id="seqPrefix" placeholder="USER">
+        </div>
+        <div class="form-group">
+          <label>البداية:</label>
+          <input type="number" id="seqStart" value="1">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>العدد:</label>
+        <input type="number" id="genAmount" value="50" min="1" max="1000">
+      </div>
+
+      <button class="btn" onclick="executeGeneration()">🚀 توليد</button>
+      <div class="btn-group">
+        <button class="btn btn-secondary btn-sm" onclick="clearGeneration()">🗑️ مسح</button>
+        <button class="btn btn-success btn-sm" onclick="saveToDB()">💾 حفظ</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📋 النتائج</h2>
+      <div class="form-group">
+        <input type="text" id="searchResults" placeholder="🔍 بحث..." oninput="renderGenerated()">
+      </div>
+      <div class="results-list" id="generatedList">
+        <div style="text-align:center; padding:30px; color:var(--text-muted);">ستظهر هنا...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: SCAN -->
+  <div id="tab-test" class="tab-content">
+    <div class="card">
+      <h2>🔗 إعدادات الفحص</h2>
+
+      <div class="templates-scroll">
+        <button class="template-chip active" onclick="applyTemplate('mikrotik')">🏢 MikroTik</button>
+        <button class="template-chip" onclick="applyTemplate('1sh')">📡 1sh</button>
+        <button class="template-chip" onclick="applyTemplate('anet')">🌍 a.net</button>
+        <button class="template-chip" onclick="applyTemplate('custom')">⚙️ مخصص</button>
+      </div>
+
+      <div class="form-group">
+        <label>رابط البوابة:</label>
+        <input type="text" id="loginURL" value="http://10.0.0.1/login" placeholder="https://example.com/login">
+      </div>
+
+      <div class="form-group">
+        <label>الكروت للفحص:</label>
+        <textarea id="testList" rows="4" placeholder="كرت في كل سطر..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>المهلة (ms):</label>
+        <input type="number" id="loginTimeOut" value="3000" min="500">
+      </div>
+
+      <div class="form-group">
+        <label>المصادقة:</label>
+        <select id="authType">
+          <option value="user_only">مستخدم فقط</option>
+          <option value="user_pass">مستخدم=مرور</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>طريقة الإرسال:</label>
+        <select id="httpMethod">
+          <option value="get">GET (آمن للهاتف)</option>
+          <option value="post">POST (يتطلب Proxy)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+          <input type="checkbox" id="useProxy" checked style="width:auto; transform:scale(1.3);">
+          <span>استخدام CORS Proxy (مستحسن)</span>
+        </label>
+      </div>
+
+      <button class="btn" onclick="startScan()" id="startBtn">▶️ بدء الفحص</button>
+      <div class="btn-group">
+        <button class="btn btn-danger btn-sm" onclick="stopScan()" id="stopBtn" disabled>⏹️ إيقاف</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearScanLog()">🗑️ مسح</button>
+      </div>
+
+      <div class="progress-container">
+        <div class="progress-header">
+          <span>التقدم</span>
+          <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress-bar-bg"><div id="progressBar" class="progress-bar-fill"></div></div>
+        <div class="progress-stats">
+          <span id="progressLabel">جاهز...</span>
+          <span id="scanStats">0/0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📺 السجل</h2>
+      <div class="console-header">
+        <span style="font-size:12px; color:var(--text-muted); font-weight:600;">الأحداث</span>
+        <div class="console-status">
+          <span class="status-dot inactive" id="statusDot"></span>
+          <span id="statusText">غير نشط</span>
+        </div>
+      </div>
+      <div id="consoleLog" class="console-log">🎯 جاهز...
+
+💡 نصائح:
+• GET آمن ويعمل بدون Proxy
+• POST يحتاج Proxy للتجاوز
+• استخدم تأخير 3+ ثوانٍ</div>
+    </div>
+
+    <div class="card">
+      <h2>📊 نتائج الفحص</h2>
+      <div class="results-list" id="scanResults">
+        <div style="text-align:center; padding:20px; color:var(--text-muted);">ستظهر النتائج هنا...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3: SAVED -->
+  <div id="tab-saved" class="tab-content">
+    <div class="card">
+      <h2>💾 الكروت المحفوظة</h2>
+      <div class="form-group">
+        <input type="text" id="searchSaved" placeholder="🔍 بحث..." oninput="renderSaved()">
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-secondary btn-sm" onclick="loadSavedToScan()">🔍 فحص</button>
+        <button class="btn btn-danger btn-sm" onclick="clearAllSaved()">🗑️ الكل</button>
+      </div>
+      <div class="results-list" id="savedList" style="margin-top:12px;">
+        <div style="text-align:center; padding:30px; color:var(--text-muted);">جاري التحميل...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 4: SETTINGS -->
+  <div id="tab-settings" class="tab-content">
+    <div class="card">
+      <h2>⚙️ الإعدادات</h2>
+      <div class="form-group">
+        <label>CORS Proxy:</label>
+        <select id="proxyProvider">
+          <option value="corsproxy.io">corsproxy.io (موصى)</option>
+          <option value="cors.sh">cors.sh</option>
+          <option value="allorigins">allorigins.win</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>تأخير عشوائي:</label>
+        <select id="delayMode">
+          <option value="none">بدون</option>
+          <option value="light" selected>خفيف (1-3 ث)</option>
+          <option value="heavy">ثقيل (3-7 ث)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>User-Agent:</label>
+        <select id="uaMode">
+          <option value="mobile" selected>هاتف (افتراضي)</option>
+          <option value="desktop">كمبيوتر</option>
+          <option value="random">عشوائي</option>
+        </select>
+      </div>
+      <button class="btn btn-secondary" onclick="clearAllData()">🗑️ مسح جميع البيانات</button>
+    </div>
+
+    <div class="card">
+      <h2>📱 حول التطبيق</h2>
+      <p style="color:var(--text-muted); font-size:14px; line-height:1.8;">
+        <strong>الإصدار:</strong> 2.0 Mobile<br>
+        <strong>التخزين:</strong> IndexedDB (محلي)<br>
+        <strong>الـ Proxy:</strong> corsproxy.io<br>
+        <strong>الوضع:</strong> PWA (يعمل Offline)<br><br>
+        💡 <strong>نصيحة:</strong> أضف التطبيق للشاشة الرئيسية لتجربة أفضل.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="switchTab('tab-generate', this)">
+    <span class="icon">🎫</span>
+    <span>توليد</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('tab-test', this)">
+    <span class="icon">🔍</span>
+    <span>فحص</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('tab-saved', this)">
+    <span class="icon">💾</span>
+    <span>محفوظ</span>
+  </button>
+  <button class="nav-item" onclick="switchTab('tab-settings', this)">
+    <span class="icon">⚙️</span>
+    <span>إعدادات</span>
+  </button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>
